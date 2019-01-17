@@ -53,7 +53,7 @@ void loop() {
   Serial.print("Видимые спутники: ");
   Serial.println(gps.satellites.value());
   Serial.print("Состояние пакетов(false-поврежденные): ");
-  Serial.print(gps.location.isValid());
+  Serial.println(gps.location.isValid());
   delay(1000);
   /** DEBUG */
   
