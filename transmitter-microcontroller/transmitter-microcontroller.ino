@@ -40,11 +40,23 @@ void setup() {
   /** Открываем serial соединения */
   radio.begin(RADIO_BAUD);
   gpsSerial.begin(GPS_BAUD);
+
+  /** DEBUG */
+  Serial.begin(9600);
 }
 void loop() {
   /** Если не улавливается ни одного спутника ИЛИ приходит невалидный пакет 
    *  с GPS устройства, то индицируем ошибку зажиганием красного светодиода.
    *  Иначе происходит мигание зеленого светодиода при отправке пакета по radio соединению. */
+
+  /** DEBUG */
+  Serial.print("Видимые спутники: ");
+  Serial.println(gps.satellites.value());
+  Serial.print("Состояние пакетов(false-поврежденные): ");
+  Serial.print(gps.location.isValid());
+  delay(1000);
+  /** DEBUG */
+  
   if(gps.satellites.value() == 0 || !gps.location.isValid()) digitalWrite(RED_LED, HIGH);
   else {
     digitalWrite(RED_LED, LOW);
