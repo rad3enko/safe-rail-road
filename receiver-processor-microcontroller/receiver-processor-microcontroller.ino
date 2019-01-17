@@ -85,7 +85,7 @@ void loop() {
         long distBetw = getDistanceBetweenNodes(messageNode, myNode);
 
         /** Формируем пакет для отправки на модуль управления сегментами */
-        char buff[10];
+        char buff[5] = "00000";
         strcat(segmentsMessage, '!');
         strcat(segmentsMessage, itoa(distBetw, buff, 10));
         strcat(segmentsMessage, '#');
