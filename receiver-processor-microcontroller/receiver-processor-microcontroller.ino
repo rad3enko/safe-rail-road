@@ -1,5 +1,11 @@
+#include <LiquidCrystal_PCF8574.h>
 #include <SoftwareSerial.h>
 #include <TinyGPS++.h>
+
+/** @edit 1.02.2019 Отлажены пины приема/передачи: GPS, RADIO.
+ *  Индикация временно реализуется на дисплее LCD 16x2 I2C (PCF8574 converter)
+ *  @bugfix 1.02.2019 Не получалось считать данные с GPS. Решение: пересадил GPS на аппаратный Serial3
+ */
 
 /** Контстанты */
 #define UUID 2
@@ -13,13 +19,13 @@ const float ARR_LNG[SIZE] = {135.062328,135.0628,135.063154,135.063508,135.06388
 
 /** Настройка пинов коммуникаций */
 /** GPS */
-static const byte RX_GPS = 10, TX_GPS = 11;
+static const int RX_GPS = 2, TX_GPS = 3;
 static const uint32_t GPS_BAUD = 9600;
 /** Радио */
-static const byte RX_RADIO = 4, TX_RADIO = 5;
+static const int RX_RADIO = 4, TX_RADIO = 5;
 static const uint32_t RADIO_BAUD = 9600;
 /** Модуль управления индикаторами */
-static const byte RX_SEGMENTS = 6, TX_SEGMENTS = 7;
+static const int RX_SEGMENTS = 6, TX_SEGMENTS = 7;
 static const uint32_t SEGMENTS_BAUD = 9600;
 
 /** Буфер хранения сообщения от передатчика */
@@ -37,6 +43,9 @@ SoftwareSerial segments(RX_SEGMENTS, TX_SEGMENTS); // RX не используе
 /** Объект для работы с модулем GPS */
 TinyGPSPlus gps;
 
+/** Объект для работы с LCD */
+LiquidCrystal_PCF8574 lcd(0x27);
+
 /** Вспомогательные функции */
 int findNearestNode(float lat1, float lng1);
 String getUuid(char *msg);
@@ -44,11 +53,27 @@ float getLat(char *msg);
 float getLng(char *msg);
 float getDistanceBetweenNodes(int index1, int index2);
 
+static void smartDelay(unsigned long ms)
+{
+  unsigned long start = millis();
+  do 
+  {
+    while (Serial3.available())
+      gps.encode(Serial3.read());
+  } while (millis() - start < ms);
+}
+
 void setup() {
   /** Открываем соединения по радио, GPS, segments каналам */
   radio.begin(RADIO_BAUD);
-  gpsSerial.begin(GPS_BAUD);
+//  gpsSerial.begin(GPS_BAUD);
   segments.begin(SEGMENTS_BAUD);
+  Serial3.begin(9600);
+
+  /** Инициализация дисплея */
+  lcd.begin(16, 2);
+  lcd.home();
+  lcd.setBacklight(255);
 
   /** Время на то, чтобы дошли данные с GPS устройства */
   delay(1000);
@@ -56,12 +81,21 @@ void setup() {
 
 void loop() {
   while(1) {
+    smartDelay(1000);
     /** Если не ловит спутники или пакет с GPS не проходит валидацию, высвечивает на индикаторах '--G--' */
     if(gps.satellites.value() == 0 || !gps.location.isValid()) {
-      segments.print("!--6--#");
+      // segments.print("!--6--#");
+      
+      /** Очистить все на экране */
+      lcd.clear();
+      lcd.print("No GPS data");
       delay(500);
+    } else {
+      lcd.clear();
+      lcd.home();
+      lcd.print("Receiving radio");
     }
-    
+        
     /** Если по радио приходят какие-то данные, начинаем их считывать */
     while(radio.available() > 0){
       char letter = radio.read();
@@ -84,14 +118,21 @@ void loop() {
         /** Получаем дистанцию между вычисленными узлами */
         long distBetw = getDistanceBetweenNodes(messageNode, myNode);
 
+        /** Выводим дистанцию на экран */
+        lcd.clear();
+        lcd.home();
+        lcd.print("Distance: ");
+        lcd.print(distBetw);
+        lcd.print("m");
+
         /** Формируем пакет для отправки на модуль управления сегментами */
-        char buff[5] = "00000";
-        strcat(segmentsMessage, '!');
-        strcat(segmentsMessage, itoa(distBetw, buff, 10));
-        strcat(segmentsMessage, '#');
+        // char buff[5] = "00000";
+        // strcat(segmentsMessage, '!');
+        // strcat(segmentsMessage, itoa(distBetw, buff, 10));
+        // strcat(segmentsMessage, '#');
 
         /** Отправляем на отображение */
-        segments.print(segmentsMessage);
+        // segments.print(segmentsMessage);
       }
     }
   }
