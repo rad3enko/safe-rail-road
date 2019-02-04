@@ -25,7 +25,7 @@ static const int RX_GPS = 2, TX_GPS = 3;
 static const uint32_t GPS_BAUD = 9600;
 /** Радио */
 static const int RX_RADIO = 4, TX_RADIO = 5;
-static const uint32_t RADIO_BAUD = 9600;
+static const uint32_t RADIO_BAUD = 1200;
 /** Модуль управления индикаторами */
 static const int RX_SEGMENTS = 6, TX_SEGMENTS = 7;
 static const uint32_t SEGMENTS_BAUD = 9600;
@@ -90,7 +90,8 @@ void loop() {
       
       /** Очистить все на экране */
       lcd.clear();
-      lcd.print("No GPS data");
+      
+      lcd.print("No self GPS data");
       delay(500);
     } else {
       lcd.clear();
@@ -120,13 +121,25 @@ void loop() {
         /** Получаем дистанцию между вычисленными узлами */
         long distBetw = getDistanceBetweenNodes(messageNode, myNode);
 
+        /** Расчет дистанции напрямую */
+        unsigned long rawDist =
+          (unsigned long)TinyGPSPlus::distanceBetween(
+            gps.location.lat(),
+            gps.location.lng(),
+            msg_lat, 
+            msg_lng);
+
         /** Выводим дистанцию на экран */
         lcd.clear();
         lcd.home();
-        lcd.print("Distance: ");
+        lcd.print("Nodes: ");
         lcd.print(distBetw);
         lcd.print("m");
-
+        lcd.setCursor(0,1);
+        lcd.print("Raw: ");
+        lcd.print(rawDist);
+        lcd.print("m");
+        
         /** Формируем пакет для отправки на модуль управления сегментами */
         // char buff[5] = "00000";
         // strcat(segmentsMessage, '!');

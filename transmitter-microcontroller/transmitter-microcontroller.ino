@@ -10,10 +10,10 @@
 #define UUID            1
 
 /** Параметры соединений */
-static const int RX_GPS = 3, TX_GPS = 5;
+static const int RX_GPS = 5, TX_GPS = 3;
 static const int RX_RADIO = 7, TX_RADIO = 6;
 static const uint32_t GPS_BAUD = 9600;
-static const uint32_t RADIO_BAUD = 9600;
+static const uint32_t RADIO_BAUD = 1200;
 
 /** Настройка serial соединений */
 /** Радиомодем */
