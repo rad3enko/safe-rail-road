@@ -53,7 +53,7 @@ int findNearestNode(float lat1, float lng1);
 String getUuid(char *msg);
 float getLat(char *msg);
 float getLng(char *msg);
-float getDistanceBetweenNodes(int index1, int index2);
+unsigned long getDistanceBetweenNodes(int index1, int index2);
 
 static void smartDelay(unsigned long ms)
 {
@@ -71,6 +71,8 @@ void setup() {
 //  gpsSerial.begin(GPS_BAUD);
   segments.begin(SEGMENTS_BAUD);
   Serial3.begin(9600);
+  Serial.begin(9600);
+  Serial1.begin(1200);
 
   /** Инициализация дисплея */
   lcd.begin(16, 2);
@@ -94,14 +96,10 @@ void loop() {
       lcd.print("No self GPS data");
       delay(500);
     } else {
-      lcd.clear();
-      lcd.home();
-      lcd.print("Receiving radio");
-    }
+      while(Serial1.available() > 0){
         
-    /** Если по радио приходят какие-то данные, начинаем их считывать */
-    while(radio.available() > 0){
-      char letter = radio.read();
+      char letter = Serial1.read();
+      Serial.print(letter);
 
       /** Начало пакета */
       if(letter=='S') messageIterator = 0;
@@ -119,7 +117,7 @@ void loop() {
         int myNode = findNearestNode(gps.location.lat(), gps.location.lng());
 
         /** Получаем дистанцию между вычисленными узлами */
-        long distBetw = getDistanceBetweenNodes(messageNode, myNode);
+        unsigned long distBetw = getDistanceBetweenNodes(messageNode, myNode);
 
         /** Расчет дистанции напрямую */
         unsigned long rawDist =
@@ -139,6 +137,7 @@ void loop() {
         lcd.print("Raw: ");
         lcd.print(rawDist);
         lcd.print("m");
+        delay(1000);
         
         /** Формируем пакет для отправки на модуль управления сегментами */
         // char buff[5] = "00000";
@@ -149,6 +148,10 @@ void loop() {
         /** Отправляем на отображение */
         // segments.print(segmentsMessage);
       }
+    }
+        
+    /** Если по радио приходят какие-то данные, начинаем их считывать */
+    
     }
   }
 }
@@ -175,8 +178,8 @@ int findNearestNode(float lat1, float lng1){
 /** @param index1 индекс первого узла
  *  @param index2 индекс второго узла
  *  @return дистанция между узлами */
-float getDistanceBetweenNodes(int index1, int index2){
-  return fabs(ARR_DST[index2] - ARR_DST[index1]);
+unsigned long getDistanceBetweenNodes(int index1, int index2){
+  return abs(ARR_DST[index2] - ARR_DST[index1]);
 }
 
 /** Достает UUID из сообщения */
