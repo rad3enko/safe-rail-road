@@ -71,7 +71,7 @@ void setup() {
 //  gpsSerial.begin(GPS_BAUD);
   segments.begin(SEGMENTS_BAUD);
   Serial3.begin(9600);
-  Serial.begin(9600);
+//  Serial.begin(9600);
   Serial1.begin(1200);
 
   /** Инициализация дисплея */
@@ -96,10 +96,12 @@ void loop() {
       lcd.print("No self GPS data");
       delay(500);
     } else {
+      lcd.clear();
+      lcd.print("Waiting radio");
       while(Serial1.available() > 0){
         
       char letter = Serial1.read();
-      Serial.print(letter);
+//      Serial.print(letter);
 
       /** Начало пакета */
       if(letter=='S') messageIterator = 0;
@@ -137,7 +139,7 @@ void loop() {
         lcd.print("Raw: ");
         lcd.print(rawDist);
         lcd.print("m");
-        delay(1000);
+        delay(5050);
         
         /** Формируем пакет для отправки на модуль управления сегментами */
         // char buff[5] = "00000";
