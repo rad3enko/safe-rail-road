@@ -1,5 +1,5 @@
 #include <LiquidCrystal_PCF8574.h>
-#include <SoftwareSerial.h>
+//#include <SoftwareSerial.h>
 #include <TinyGPS++.h>
 
 /** @edit 1.02.2019 Отлажены пины приема/передачи: GPS, RADIO.
@@ -21,26 +21,26 @@ const PROGMEM float ARR_LNG[SIZE] = {131.9314,131.9322,131.9329,131.9338,131.934
 
 /** Настройка пинов коммуникаций */
 /** GPS */
-static const int RX_GPS = 2, TX_GPS = 3;
+//static const int RX_GPS = 2, TX_GPS = 3;
 static const uint32_t GPS_BAUD = 9600;
 /** Радио */
-static const int RX_RADIO = 4, TX_RADIO = 5;
+//static const int RX_RADIO = 4, TX_RADIO = 5;
 static const uint32_t RADIO_BAUD = 1200;
 /** Модуль управления индикаторами */
-static const int RX_SEGMENTS = 6, TX_SEGMENTS = 7;
-static const uint32_t SEGMENTS_BAUD = 9600;
+//static const int RX_SEGMENTS = 6, TX_SEGMENTS = 7;
+//static const uint32_t SEGMENTS_BAUD = 9600;
 
 /** Буфер хранения сообщения от передатчика */
 char message[32] = ""; 
 int messageIterator = 0;
 
 /** Буфер сообщения, передаваемого на модуль управления семисегментными индикаторами */
-char segmentsMessage[7] = "";
+//char segmentsMessage[7] = "";
 
 /** Открываем serial соединения */
-SoftwareSerial radio(RX_RADIO, TX_RADIO); // TX не используется
-SoftwareSerial gpsSerial(RX_GPS, TX_GPS); // TX не используется
-SoftwareSerial segments(RX_SEGMENTS, TX_SEGMENTS); // RX не используется
+//SoftwareSerial radio(RX_RADIO, TX_RADIO); // TX не используется
+//SoftwareSerial gpsSerial(RX_GPS, TX_GPS); // TX не используется
+//SoftwareSerial segments(RX_SEGMENTS, TX_SEGMENTS); // RX не используется
 
 /** Объект для работы с модулем GPS */
 TinyGPSPlus gps;
@@ -54,25 +54,17 @@ String getUuid(char *msg);
 float getLat(char *msg);
 float getLng(char *msg);
 unsigned long getDistanceBetweenNodes(int index1, int index2);
-
-static void smartDelay(unsigned long ms)
-{
-  unsigned long start = millis();
-  do 
-  {
-    while (Serial3.available())
-      gps.encode(Serial3.read());
-  } while (millis() - start < ms);
-}
+static void smartDelay(unsigned long ms);
 
 void setup() {
-  /** Открываем соединения по радио, GPS, segments каналам */
-  radio.begin(RADIO_BAUD);
-//  gpsSerial.begin(GPS_BAUD);
-  segments.begin(SEGMENTS_BAUD);
-  Serial3.begin(9600);
-//  Serial.begin(9600);
-  Serial1.begin(1200);
+  /** Открываем соединения по радио, GPS */
+//  segments.begin(SEGMENTS_BAUD);
+
+  /** Serial1 = radio */
+  Serial1.begin(RADIO_BAUD);
+
+  /** Serial3 = GPS */
+  Serial3.begin(GPS_BAUD);
 
   /** Инициализация дисплея */
   lcd.begin(16, 2);
@@ -86,7 +78,7 @@ void setup() {
 void loop() {
   while(1) {
     smartDelay(1000);
-    /** Если не ловит спутники или пакет с GPS не проходит валидацию, высвечивает на индикаторах '--G--' */
+    /** Если не ловит спутники или пакет с GPS не проходит валидацию */
     if(gps.satellites.value() == 0 || !gps.location.isValid()) {
       // segments.print("!--6--#");
       
@@ -101,7 +93,6 @@ void loop() {
       while(Serial1.available() > 0){
         
       char letter = Serial1.read();
-//      Serial.print(letter);
 
       /** Начало пакета */
       if(letter=='S') messageIterator = 0;
@@ -157,6 +148,7 @@ void loop() {
     }
   }
 }
+
 
 
 /** Возвращает ближайший узел с переданным широте и долготе.
@@ -223,4 +215,14 @@ float getLng(char *msg){
   lngf += 0.001  * (lng1[6]-'0');
   lngf += 0.0001 * (lng1[7]-'0');
   return lngf;
+}
+
+static void smartDelay(unsigned long ms)
+{
+  unsigned long start = millis();
+  do 
+  {
+    while (Serial3.available())
+      gps.encode(Serial3.read());
+  } while (millis() - start < ms);
 }
