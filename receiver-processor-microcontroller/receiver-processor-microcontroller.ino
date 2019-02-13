@@ -34,6 +34,9 @@ static const uint32_t RADIO_BAUD = 1200;
 char message[32] = ""; 
 int messageIterator = 0;
 
+unsigned long distBetw;
+unsigned long rawDist;
+
 /** Буфер сообщения, передаваемого на модуль управления семисегментными индикаторами */
 //char segmentsMessage[7] = "";
 
@@ -48,13 +51,18 @@ TinyGPSPlus gps;
 /** Объект для работы с LCD */
 LiquidCrystal_PCF8574 lcd(0x27);
 
+boolean isGpsOk = false;
+boolean isRadioOk = false;
+
 /** Вспомогательные функции */
 int findNearestNode(float lat1, float lng1);
 String getUuid(char *msg);
 float getLat(char *msg);
 float getLng(char *msg);
 unsigned long getDistanceBetweenNodes(int index1, int index2);
-static void smartDelay(unsigned long ms);
+static void smartListenGps(unsigned long ms);
+static void smartListenRadio(unsigned long ms);
+static void lcdPrint();
 
 void setup() {
   /** Открываем соединения по радио, GPS */
@@ -70,82 +78,13 @@ void setup() {
   lcd.begin(16, 2);
   lcd.home();
   lcd.setBacklight(255);
-
-  /** Время на то, чтобы дошли данные с GPS устройства */
-  delay(1000);
 }
 
 void loop() {
   while(1) {
-    smartDelay(1000);
-    /** Если не ловит спутники или пакет с GPS не проходит валидацию */
-    if(gps.satellites.value() == 0 || !gps.location.isValid()) {
-      // segments.print("!--6--#");
-      
-      /** Очистить все на экране */
-      lcd.clear();
-      
-      lcd.print("No self GPS data");
-      delay(500);
-    } else {
-      lcd.clear();
-      lcd.print("Waiting radio");
-      while(Serial1.available() > 0){
-        
-      char letter = Serial1.read();
-
-      /** Начало пакета */
-      if(letter=='S') messageIterator = 0;
-
-      /** Вносим в буфер пришедший символ, инкреминируем итератор */
-      message[messageIterator++] = letter;
-
-      /** Конец пакета, проводим расшифровку */
-      if(letter=='E'){ 
-        String msg_uuid = getUuid(message);
-        float  msg_lat  = getLat(message);
-        float  msg_lng  = getLng(message);
-
-        int messageNode = findNearestNode(msg_lat, msg_lng);
-        int myNode = findNearestNode(gps.location.lat(), gps.location.lng());
-
-        /** Получаем дистанцию между вычисленными узлами */
-        unsigned long distBetw = getDistanceBetweenNodes(messageNode, myNode);
-
-        /** Расчет дистанции напрямую */
-        unsigned long rawDist =
-          (unsigned long)TinyGPSPlus::distanceBetween(
-            gps.location.lat(),
-            gps.location.lng(),
-            msg_lat, 
-            msg_lng);
-
-        /** Выводим дистанцию на экран */
-        lcd.clear();
-        lcd.home();
-        lcd.print("Nodes: ");
-        lcd.print(distBetw);
-        lcd.print("m");
-        lcd.setCursor(0,1);
-        lcd.print("Raw: ");
-        lcd.print(rawDist);
-        lcd.print("m");
-        delay(5050);
-        
-        /** Формируем пакет для отправки на модуль управления сегментами */
-        // char buff[5] = "00000";
-        // strcat(segmentsMessage, '!');
-        // strcat(segmentsMessage, itoa(distBetw, buff, 10));
-        // strcat(segmentsMessage, '#');
-
-        /** Отправляем на отображение */
-        // segments.print(segmentsMessage);
-      }
-    }
-        
-    /** Если по радио приходят какие-то данные, начинаем их считывать */
-    
-    }
+    smartListenGps(2000);
+    smartListenRadio(3000);
+    lcdPrint();
   }
 }
 
@@ -217,12 +156,87 @@ float getLng(char *msg){
   return lngf;
 }
 
-static void smartDelay(unsigned long ms)
-{
+static void smartListenGps(unsigned long ms) {
+    unsigned long start = millis();
+    isGpsOk = false;
+    
+    do {
+      while (Serial3.available()) {
+        gps.encode(Serial3.read());
+        
+        if(gps.satellites.value() == 0 || !gps.location.isValid()) {
+           isGpsOk = false;
+        } else {
+           isGpsOk = true;
+        }
+      }
+    } while (millis() - start < ms);
+}
+
+static void smartListenRadio(unsigned long ms) {
   unsigned long start = millis();
-  do 
-  {
-    while (Serial3.available())
-      gps.encode(Serial3.read());
+  isRadioOk = false;
+  
+  do {
+    while(Serial1.available()){
+      
+    char letter = Serial1.read();
+
+    /** Начало пакета */
+    if(letter=='S') messageIterator = 0;
+
+    /** Вносим в буфер пришедший символ, инкреминируем итератор */
+    message[messageIterator++] = letter;
+
+    /** Конец пакета, проводим расшифровку */
+    if(letter=='E'){ 
+      String msg_uuid = getUuid(message);
+      float  msg_lat  = getLat(message);
+      float  msg_lng  = getLng(message);
+
+      int messageNode = findNearestNode(msg_lat, msg_lng);
+      int myNode = findNearestNode(gps.location.lat(), gps.location.lng());
+
+      /** Получаем дистанцию между вычисленными узлами */
+      distBetw = getDistanceBetweenNodes(messageNode, myNode);
+
+      /** Расчет дистанции напрямую */
+      rawDist =
+        (unsigned long)TinyGPSPlus::distanceBetween(
+          gps.location.lat(),
+          gps.location.lng(),
+          msg_lat, 
+          msg_lng);
+          
+      isRadioOk = true;
+    }
+  }
   } while (millis() - start < ms);
+}
+
+static void lcdPrint() {
+  lcd.clear();
+  lcd.home();
+  /** Отображаем состояние на экран */
+  if (!(isGpsOk && isRadioOk)) {
+    
+    /** Что-то не так */
+    lcd.print("GPS:");
+    isGpsOk ? lcd.print("+") : lcd.print("-");
+
+    lcd.setCursor(0, 1);
+    lcd.print("RADIO:");
+    isRadioOk ? lcd.print("+") : lcd.print("-");
+  } else {
+    
+    /** Все ок, можно светить дистанцию */
+    lcd.print("Line: ");
+    lcd.print(rawDist);
+    lcd.print("m");
+
+    lcd.setCursor(0, 1);
+    lcd.print("Path: ");
+    lcd.print(distBetw);
+    lcd.print("m");
+  }
 }
