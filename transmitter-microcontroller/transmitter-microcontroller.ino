@@ -6,7 +6,7 @@
 /** Основные константы */
 #define RED_LED         8
 #define GREEN_LED       9
-#define TRANSMIT_DELAY  5000
+#define TRANSMIT_DELAY  1500
 #define UUID            1
 
 /** Параметры соединений */
