@@ -4,3 +4,5 @@
 **receiver-processor-microcontroller** для приемника обработчика на базе Arduino MEGA 2560
 
 **segments-cascade-microcontroller** для модуля управления каскадом семисегметных индикаторов
+
+track: http://www.etomesto.ru/track8202177678/
