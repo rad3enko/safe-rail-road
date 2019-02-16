@@ -77,6 +77,9 @@ void setup() {
   /** Serial3 = GPS */
   Serial3.begin(GPS_BAUD);
 
+  /** DEBUG */
+  Serial.begin(9600);
+
   /** Инициализация дисплея */
   lcd.begin(16, 2);
   lcd.home();
@@ -199,6 +202,20 @@ static void smartListenRadio(unsigned long ms) {
 
       messageNode = findNearestNode(msg_lat, msg_lng);
       myNode = findNearestNode(gps.location.lat(), gps.location.lng());
+
+      /** DEBUG */
+      /** Выводит в Serial монитор координаты из принятого пакета и свои текущие. */
+      Serial.print("Message coordinates: ");
+      Serial.print(msg_lat);
+      Serial.print(", ");
+      Serial.println(msg_lng);
+
+      Serial.print("Receiver coordinates: ");
+      Serial.print(gps.location.lat());
+      Serial.print(", ");
+      Serial.println(gps.location.lng());
+      /** DEBUG endregion */
+
 
       /** Получаем дистанцию между вычисленными узлами */
       distBetw = getDistanceBetweenNodes(messageNode, myNode);
