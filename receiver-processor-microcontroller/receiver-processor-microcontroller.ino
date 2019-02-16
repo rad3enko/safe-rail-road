@@ -103,9 +103,11 @@ void loop() {
  *  @return ближайший узел */
 int findNearestNode(float lat1, float lng1){
   int minIndex = 0;
-  float minDiff = 999.0;
+  float minDiff = 999999.0;
   for(int i=0; i<SIZE; i++){
-    float diff = fabs(lat1 - ARR_LAT[i]) + fabs(lng1 - ARR_LNG[i]);
+    float lat_diff = lat1 - ARR_LAT[i];
+    float lng_diff = lng1 - ARR_LNG[i];
+    float diff = sqrt(lat_diff*lat_diff + lng_diff*lng_diff);
     if(diff < minDiff){
       minIndex = i;
       minDiff = diff;
