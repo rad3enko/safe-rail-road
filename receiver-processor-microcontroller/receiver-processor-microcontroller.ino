@@ -89,7 +89,7 @@ void setup() {
 void loop() {
   while(1) {
     smartListenGps(1000);
-    smartListenRadio(500);
+    smartListenRadio(1500);
     lcdPrint();
   }
 }
