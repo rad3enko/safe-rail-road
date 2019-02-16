@@ -206,14 +206,14 @@ static void smartListenRadio(unsigned long ms) {
       /** DEBUG */
       /** Выводит в Serial монитор координаты из принятого пакета и свои текущие. */
       Serial.print("Message coordinates: ");
-      Serial.print(msg_lat);
+      Serial.print(msg_lat, 5);
       Serial.print(", ");
-      Serial.println(msg_lng);
+      Serial.println(msg_lng, 5);
 
       Serial.print("Receiver coordinates: ");
-      Serial.print(gps.location.lat());
+      Serial.print(gps.location.lat(), 5);
       Serial.print(", ");
-      Serial.println(gps.location.lng());
+      Serial.println(gps.location.lng(), 5);
       /** DEBUG endregion */
 
 
@@ -260,11 +260,11 @@ static void lcdPrint() {
     lcd.print("m");
 
     /** В первой строке выведем ноду передатчика */
-    lcd.setCursor(0, 13);
+    lcd.setCursor(13, 0);
     lcd.print(messageNode);
 
     /** Во второй строке выведем ноду приемника */
-    lcd.setCursor(1, 13);
+    lcd.setCursor(13, 1);
     lcd.print(myNode);
   }
 }
