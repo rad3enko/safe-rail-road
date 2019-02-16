@@ -37,6 +37,9 @@ int messageIterator = 0;
 unsigned long distBetw;
 unsigned long rawDist;
 
+int messageNode = 0;
+int myNode = 0;
+
 /** Буфер сообщения, передаваемого на модуль управления семисегментными индикаторами */
 //char segmentsMessage[7] = "";
 
@@ -194,8 +197,8 @@ static void smartListenRadio(unsigned long ms) {
       float  msg_lat  = getLat(message);
       float  msg_lng  = getLng(message);
 
-      int messageNode = findNearestNode(msg_lat, msg_lng);
-      int myNode = findNearestNode(gps.location.lat(), gps.location.lng());
+      messageNode = findNearestNode(msg_lat, msg_lng);
+      myNode = findNearestNode(gps.location.lat(), gps.location.lng());
 
       /** Получаем дистанцию между вычисленными узлами */
       distBetw = getDistanceBetweenNodes(messageNode, myNode);
@@ -238,5 +241,13 @@ static void lcdPrint() {
     lcd.print("Path: ");
     lcd.print(distBetw);
     lcd.print("m");
+
+    /** В первой строке выведем ноду передатчика */
+    lcd.setCursor(0, 13);
+    lcd.print(messageNode);
+
+    /** Во второй строке выведем ноду приемника */
+    lcd.setCursor(1, 13);
+    lcd.print(myNode);
   }
 }
