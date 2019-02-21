@@ -120,7 +120,7 @@ int findNearestNode(float lat1, float lng1){
  *  @param index2 индекс второго узла
  *  @return дистанция между узлами */
 unsigned long getDistanceBetweenNodes(int index1, int index2){
-  return abs(ARR_DST[index2] - ARR_DST[index1]);
+  return abs(pgm_read_float_near(ARR_DST+index2) - pgm_read_float_near(ARR_DST+index1));
 }
 
 /** Достает UUID из сообщения */
