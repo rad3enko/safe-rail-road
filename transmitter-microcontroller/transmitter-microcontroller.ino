@@ -6,14 +6,14 @@
 /** Основные константы */
 #define RED_LED         8
 #define GREEN_LED       9
-#define TRANSMIT_DELAY  5000
+#define TRANSMIT_DELAY  1500
 #define UUID            1
 
 /** Параметры соединений */
-static const int RX_GPS = 3, TX_GPS = 2;
-static const int RX_RADIO = 5, TX_RADIO = 6;
+static const int RX_GPS = 5, TX_GPS = 3;
+static const int RX_RADIO = 7, TX_RADIO = 6;
 static const uint32_t GPS_BAUD = 9600;
-static const uint32_t RADIO_BAUD = 9600;
+static const uint32_t RADIO_BAUD = 1200;
 
 /** Настройка serial соединений */
 /** Радиомодем */
@@ -54,7 +54,6 @@ void loop() {
   Serial.println(gps.satellites.value());
   Serial.print("Состояние пакетов(false-поврежденные): ");
   Serial.println(gps.location.isValid());
-  delay(1000);
   /** DEBUG */
   
   if(gps.satellites.value() == 0 || !gps.location.isValid()) digitalWrite(RED_LED, HIGH);
@@ -78,8 +77,9 @@ void loop() {
     radio.print(package);
     digitalWrite(GREEN_LED, LOW);
     gpsSerial.flush();
-    smartDelay(TRANSMIT_DELAY);
+    //smartDelay(TRANSMIT_DELAY);
   }
+  smartDelay(TRANSMIT_DELAY);
 }
 
 void reverse(char *str, int len) { 
