@@ -36,8 +36,9 @@ static const uint32_t RADIO_BAUD = 1200;
 //static const uint32_t SEGMENTS_BAUD = 9600;
 
 /** Буфер хранения сообщения от передатчика */
-char message[256] = ""; 
+char message[64] = ""; 
 int messageIterator = 0;
+int defaultMessageSize = 24;
 
 unsigned long distBetw;
 unsigned long rawDist;
@@ -198,7 +199,10 @@ static void smartListenRadio(unsigned long ms) {
     // Check if char valid
     if (!(  letter == '.' ||
          (letter >= 48 && letter <= 57) ||
-         (letter >= 65 && letter <= 90))) {
+         (letter >= 65 && letter <= 90))  ||
+
+         // Check if message size valid
+         messageIterator > defaultMessageSize) {
       isRadioOk = false;
       messageIterator = 0;
     } else {
@@ -210,7 +214,7 @@ static void smartListenRadio(unsigned long ms) {
     if(letter=='S') messageIterator = 0;
     
     /** Конец пакета, проводим расшифровку */
-    if(letter=='E' && messageIterator == 24){ 
+    if(letter=='E' && messageIterator == defaultMessageSize){ 
       String msg_uuid = getUuid(message);
       float  msg_lat  = getLat(message);
       float  msg_lng  = getLng(message);
