@@ -1,8 +1,9 @@
-# Репозиторий с прошивками для устройств системы интервального регулирования подвижных объектов
-**transmitter-microcontroller** для передатчика на базе Arduino UNO R3
+# Software scetches for "Moving objects distance control system".
 
-**receiver-processor-microcontroller** для приемника обработчика на базе Arduino MEGA 2560
+**transmitter-microcontroller** HW: Arduino UNO R3 (ATMega328P)
 
-**segments-cascade-microcontroller** для модуля управления каскадом семисегметных индикаторов
+**receiver-processor-microcontroller** HW: Arduino MEGA 2560 (ATMega2560)
 
-track: http://www.etomesto.ru/track8202177678/
+**segments-cascade-microcontroller** HW: 7-segments cascade
+
+Khabarovsk test track-data: http://www.etomesto.ru/track8202177678/
